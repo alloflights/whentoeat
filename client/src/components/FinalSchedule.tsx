@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { formatDateWithWeekday } from '../utils/dateHelpers';
+import type { Restaurant } from '../types';
+import confetti from 'canvas-confetti';
 import {
   Calendar,
   Copy,
   Check,
   RotateCcw,
   Sparkles,
-  Trash2
+  Trash2,
+  Star,
+  X
 } from 'lucide-react';
 
 interface FinalScheduleProps {
@@ -15,9 +19,14 @@ interface FinalScheduleProps {
 }
 
 export const FinalSchedule: React.FC<FinalScheduleProps> = ({ onBackToMain }) => {
-  const { roomState, unscheduleRestaurant, resetAllSchedules, openScheduler } = useSocket();
+  const { roomState, unscheduleRestaurant, completeRestaurant, resetAllSchedules, openScheduler } = useSocket();
   const [copied, setCopied] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [checkInRestaurant, setCheckInRestaurant] = useState<Restaurant | null>(null);
+  const [checkInDate, setCheckInDate] = useState('');
+  const [checkInRating, setCheckInRating] = useState<number>(5);
+  const [checkInReview, setCheckInReview] = useState('');
+  const [checkInCost, setCheckInCost] = useState('');
 
   const scheduledRestaurants = (roomState?.restaurants || [])
     .filter(r => r.status === 'scheduled' && r.scheduledDate)
@@ -129,15 +138,30 @@ export const FinalSchedule: React.FC<FinalScheduleProps> = ({ onBackToMain }) =>
                         </span>
                       </div>
 
-                      {/* Unschedule button */}
-                      <button
-                        onClick={() => unscheduleRestaurant(restaurant.id)}
-                        className="text-xs text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors self-start sm:self-auto"
-                        title="取消此排期并放回待选"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>重新排期</span>
-                      </button>
+                      {/* Actions: Check in or Unschedule */}
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <button
+                          onClick={() => {
+                            setCheckInRestaurant(restaurant);
+                            setCheckInDate(restaurant.scheduledDate || new Date().toISOString().split('T')[0]);
+                            setCheckInRating(5);
+                            setCheckInReview('');
+                            setCheckInCost('');
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-xs transition-colors flex items-center gap-1"
+                          title="吃完啦？点击打卡记录美食足迹"
+                        >
+                          <span>🎉 打卡吃过</span>
+                        </button>
+                        <button
+                          onClick={() => unscheduleRestaurant(restaurant.id)}
+                          className="text-xs text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors p-1"
+                          title="取消此排期并放回待选"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>重新排期</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex items-start justify-between gap-3 pt-2 border-t border-slate-200/60">
@@ -187,6 +211,127 @@ export const FinalSchedule: React.FC<FinalScheduleProps> = ({ onBackToMain }) =>
           </div>
         )}
       </div>
+
+      {/* Check In Modal */}
+      {checkInRestaurant && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-200" />
+                <h3 className="text-sm font-black">🎉 美食打卡：{checkInRestaurant.name}</h3>
+              </div>
+              <button
+                onClick={() => setCheckInRestaurant(null)}
+                className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                completeRestaurant(checkInRestaurant.id, {
+                  eatenDate: checkInDate,
+                  rating: checkInRating,
+                  review: checkInReview.trim(),
+                  cost: checkInCost.trim() || undefined,
+                });
+                confetti({
+                  particleCount: 80,
+                  spread: 70,
+                  origin: { y: 0.6 }
+                });
+                setCheckInRestaurant(null);
+              }}
+              className="p-5 space-y-4"
+            >
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                  打卡就餐日期
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={checkInDate}
+                  onChange={(e) => setCheckInDate(e.target.value)}
+                  className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                  美食评分（星级）
+                </label>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setCheckInRating(star)}
+                      className="p-1 text-2xl transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          star <= checkInRating
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-slate-200'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  <span className="text-xs font-bold text-amber-600 ml-2">
+                    {checkInRating === 5 ? '⭐⭐⭐⭐⭐ 封神美味！' : checkInRating === 4 ? '⭐⭐⭐⭐ 很好吃' : checkInRating === 3 ? '⭐⭐⭐ 普通' : '一般般'}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                  评价 / 回忆记录（选填）
+                </label>
+                <textarea
+                  value={checkInReview}
+                  onChange={(e) => setCheckInReview(e.target.value)}
+                  placeholder="例如：毛肚巨脆，番茄锅底好浓郁！两人吃得很开心~"
+                  rows={2}
+                  className="w-full text-xs border border-slate-200 rounded-xl p-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                  消费金额或人均（选填）
+                </label>
+                <input
+                  type="text"
+                  value={checkInCost}
+                  onChange={(e) => setCheckInCost(e.target.value)}
+                  placeholder="例如：人均88 / 团购158"
+                  className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCheckInRestaurant(null)}
+                  className="text-xs px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-medium transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  className="text-xs px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-xs transition-colors"
+                >
+                  确认打卡吃过 ✨
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Reset confirmation modal */}
       {showResetConfirm && (

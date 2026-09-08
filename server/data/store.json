@@ -29,6 +29,26 @@
       },
       "restaurants": [
         {
+          "id": "rest_completed_sample_1",
+          "roomId": "weekend-foodies",
+          "name": "老街重庆小面 & 冰粉",
+          "category": "小吃排档",
+          "priority": 2,
+          "preferredSlotType": "lunch",
+          "notes": "招牌豌杂面 + 手工红糖冰粉",
+          "status": "completed",
+          "eatenDate": "2026-09-05",
+          "scheduledDate": "2026-09-05",
+          "scheduledSlotType": "lunch",
+          "scheduledSlotLabel": "午餐",
+          "completedAt": 1788870000000,
+          "rating": 5,
+          "review": "豌杂面炸酱巨香！红糖冰粉特别解辣，价格还实惠，太满足了！",
+          "cost": "人均22",
+          "createdAt": 1788870000000,
+          "orderIndex": 0
+        },
+        {
           "id": "rest_hotpot_1",
           "roomId": "weekend-foodies",
           "name": "川味老火锅",
@@ -81,6 +101,73 @@
         }
       ],
       "updatedAt": 1788878080150
+    },
+    "student-test-1788878856588": {
+      "roomId": "student-test-1788878856588",
+      "user1Name": "学霸小明",
+      "user2Name": "学委小红",
+      "weeklyBusy": {
+        "user1": {
+          "weekday_5_dinner": {
+            "type": "weekly",
+            "reason": "高等数学习题课"
+          }
+        },
+        "user2": {}
+      },
+      "dateBusy": {
+        "2026-09-12_lunch": {
+          "user2": {
+            "type": "this_week",
+            "reason": "大作业Pre汇报"
+          }
+        },
+        "2026-09-13_lunch": {
+          "user2": {
+            "type": "temp",
+            "reason": "导师临时组会"
+          }
+        }
+      },
+      "restaurants": [
+        {
+          "id": "rest_frzfpe9",
+          "roomId": "student-test-1788878856588",
+          "name": "川味老火锅",
+          "category": "火锅",
+          "priority": 1,
+          "preferredSlotType": "dinner",
+          "notes": "考完高数必须吃一顿！",
+          "status": "pending",
+          "createdAt": 1788878856589,
+          "orderIndex": 1
+        },
+        {
+          "id": "rest_7i0okoj",
+          "roomId": "student-test-1788878856588",
+          "name": "大学城烤肉居酒屋",
+          "category": "烤肉/烧烤",
+          "priority": 2,
+          "preferredSlotType": "dinner",
+          "notes": "周六晚上去放松",
+          "status": "pending",
+          "createdAt": 1788878856590,
+          "orderIndex": 2
+        },
+        {
+          "id": "rest_cxdjoe6",
+          "roomId": "student-test-1788878856588",
+          "name": "校门口鲜奶茶",
+          "category": "咖啡甜品",
+          "priority": 3,
+          "preferredSlotType": "afternoon_tea",
+          "notes": "随便喝喝",
+          "status": "pending",
+          "createdAt": 1788878856590,
+          "orderIndex": 3
+        }
+      ],
+      "updatedAt": 1788878856599
     }
   }
 }

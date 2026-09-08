@@ -33,6 +33,9 @@ interface SocketContextValue {
   confirmScheduleStep: (restaurantId: string, date: string, slotType: MealSlotType, slotLabel: string) => void;
   skipScheduleStep: (restaurantId: string) => void;
   unscheduleRestaurant: (restaurantId: string) => void;
+  completeRestaurant: (restaurantId: string, details: { eatenDate?: string; rating?: number; review?: string; cost?: string | number }) => void;
+  addCompletedRestaurant: (data: { name: string; category: string; eatenDate: string; scheduledSlotType?: any; scheduledSlotLabel?: string; rating?: number; review?: string; cost?: string | number; notes?: string }) => void;
+  revisitRestaurant: (restaurantId: string) => void;
   resetAllSchedules: () => void;
   updateProfile: (user1Name: string, user2Name: string) => void;
   lastConfirmedRestaurantName: string | null;
@@ -231,6 +234,21 @@ export const SocketProvider: React.FC<{ children: React.ReactNode; roomId: strin
     socket.emit('unschedule-restaurant', { roomId, restaurantId });
   }, [socket, roomId]);
 
+  const completeRestaurant = useCallback((restaurantId: string, details: { eatenDate?: string; rating?: number; review?: string; cost?: string | number }) => {
+    if (!socket) return;
+    socket.emit('complete-restaurant', { roomId, restaurantId, details });
+  }, [socket, roomId]);
+
+  const addCompletedRestaurant = useCallback((data: { name: string; category: string; eatenDate: string; scheduledSlotType?: any; scheduledSlotLabel?: string; rating?: number; review?: string; cost?: string | number; notes?: string }) => {
+    if (!socket) return;
+    socket.emit('add-completed-restaurant', { roomId, data });
+  }, [socket, roomId]);
+
+  const revisitRestaurant = useCallback((restaurantId: string) => {
+    if (!socket) return;
+    socket.emit('revisit-restaurant', { roomId, restaurantId });
+  }, [socket, roomId]);
+
   const resetAllSchedules = useCallback(() => {
     if (!socket) return;
     socket.emit('reset-all-schedules', { roomId });
@@ -261,6 +279,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode; roomId: strin
         confirmScheduleStep,
         skipScheduleStep,
         unscheduleRestaurant,
+        completeRestaurant,
+        addCompletedRestaurant,
+        revisitRestaurant,
         resetAllSchedules,
         updateProfile,
         lastConfirmedRestaurantName,

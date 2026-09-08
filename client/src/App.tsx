@@ -5,15 +5,17 @@ import { AvailabilityGrid } from './components/AvailabilityGrid';
 import { RestaurantList } from './components/RestaurantList';
 import { SchedulerModal } from './components/SchedulerModal';
 import { FinalSchedule } from './components/FinalSchedule';
+import { DiningHistory } from './components/DiningHistory';
 import { Sparkles, Heart } from 'lucide-react';
 
 const MainDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'main' | 'schedule'>('main');
+  const [activeTab, setActiveTab] = useState<'main' | 'schedule' | 'history'>('main');
   const [showGuide, setShowGuide] = useState(true);
   const { isSchedulerOpen, closeScheduler, openScheduler, roomState } = useSocket();
 
   const pendingCount = roomState?.restaurants.filter(r => r.status === 'pending').length || 0;
   const scheduledCount = roomState?.restaurants.filter(r => r.status === 'scheduled').length || 0;
+  const completedCount = roomState?.restaurants.filter(r => r.status === 'completed').length || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50/40 via-white to-slate-50 flex flex-col text-slate-900 pb-20 md:pb-0">
@@ -64,7 +66,7 @@ const MainDashboard: React.FC = () => {
         )}
 
         {/* View Switching */}
-        {activeTab === 'main' ? (
+        {activeTab === 'main' && (
           <div className="space-y-6">
             {/* Section 1: Availability Matrix */}
             <section>
@@ -76,9 +78,17 @@ const MainDashboard: React.FC = () => {
               <RestaurantList />
             </section>
           </div>
-        ) : (
+        )}
+
+        {activeTab === 'schedule' && (
           <section>
             <FinalSchedule onBackToMain={() => setActiveTab('main')} />
+          </section>
+        )}
+
+        {activeTab === 'history' && (
+          <section>
+            <DiningHistory onGoToSchedule={() => setActiveTab('schedule')} />
           </section>
         )}
       </main>
@@ -98,7 +108,7 @@ const MainDashboard: React.FC = () => {
       <div className="md:hidden fixed bottom-4 left-4 right-4 z-40 bg-white/95 backdrop-blur-md rounded-2xl p-1.5 shadow-xl border border-orange-100 flex items-center justify-between gap-1">
         <button
           onClick={() => setActiveTab('main')}
-          className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${
+          className={`flex-1 py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${
             activeTab === 'main'
               ? 'bg-orange-50 text-orange-700'
               : 'text-slate-500 hover:text-slate-800'
@@ -110,14 +120,14 @@ const MainDashboard: React.FC = () => {
         <button
           onClick={openScheduler}
           disabled={pendingCount === 0}
-          className={`py-2 px-4 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center gap-1.5 shadow-md ${
+          className={`py-2 px-3 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center gap-1 shadow-md ${
             pendingCount > 0
               ? 'bg-gradient-to-r from-orange-500 to-amber-500 shadow-orange-200'
               : 'bg-slate-300 text-slate-500 cursor-not-allowed'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>智能排期</span>
+          <span>排期</span>
           {pendingCount > 0 && (
             <span className="w-4 h-4 rounded-full bg-white text-orange-600 text-[10px] flex items-center justify-center font-black">
               {pendingCount}
@@ -127,16 +137,32 @@ const MainDashboard: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('schedule')}
-          className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${
+          className={`flex-1 py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${
             activeTab === 'schedule'
               ? 'bg-orange-50 text-orange-700'
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          <span>已定日程</span>
+          <span>已定</span>
           {scheduledCount > 0 && (
             <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold">
               {scheduledCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex-1 py-2 px-1 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1 ${
+            activeTab === 'history'
+              ? 'bg-rose-50 text-rose-700'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <span>足迹</span>
+          {completedCount > 0 && (
+            <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold">
+              {completedCount}
             </span>
           )}
         </button>

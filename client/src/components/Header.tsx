@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useSocket } from '../context/SocketContext';
-import { Users, Sparkles, Calendar, Check, Edit2, Share2, UtensilsCrossed, QrCode } from 'lucide-react';
+import { Users, Sparkles, Calendar, Check, Edit2, Share2, UtensilsCrossed, QrCode, Award } from 'lucide-react';
 import { QRCodeModal } from './QRCodeModal';
 
 interface HeaderProps {
-  activeTab: 'main' | 'schedule';
-  setActiveTab: (tab: 'main' | 'schedule') => void;
+  activeTab: 'main' | 'schedule' | 'history';
+  setActiveTab: (tab: 'main' | 'schedule' | 'history') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
@@ -26,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
 
   const pendingCount = roomState?.restaurants.filter(r => r.status === 'pending').length || 0;
   const scheduledCount = roomState?.restaurants.filter(r => r.status === 'scheduled').length || 0;
+  const completedCount = roomState?.restaurants.filter(r => r.status === 'completed').length || 0;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -188,6 +189,22 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 {scheduledCount > 0 && (
                   <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold">
                     {scheduledCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
+                  activeTab === 'history'
+                    ? 'bg-white text-slate-800 shadow-2xs font-semibold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Award className="w-3.5 h-3.5 text-rose-500" />
+                <span>吃过足迹</span>
+                {completedCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold">
+                    {completedCount}
                   </span>
                 )}
               </button>

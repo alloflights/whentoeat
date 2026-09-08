@@ -30,10 +30,15 @@ export interface Restaurant {
   priority: number; // 1 (Highest) to 4 (Low)
   preferredSlotType: 'any' | MealSlotType;
   notes?: string;
-  status: 'pending' | 'scheduled' | 'skipped';
+  status: 'pending' | 'scheduled' | 'skipped' | 'completed';
   scheduledDate?: string;
   scheduledSlotType?: MealSlotType;
   scheduledSlotLabel?: string;
+  eatenDate?: string;
+  completedAt?: number;
+  rating?: number;
+  review?: string;
+  cost?: string | number;
   createdAt: number;
   orderIndex: number;
 }

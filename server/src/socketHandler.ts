@@ -9,6 +9,9 @@ import {
   resetAllSchedules,
   updateRoomUsers,
   restoreRoomState,
+  completeRestaurant,
+  addCompletedRestaurant,
+  revisitRestaurant,
   skipRestaurant,
   setBusyStatus,
   clearBusyStatus
@@ -173,6 +176,46 @@ export function setupSocketHandlers(io: Server) {
 
     socket.on('unschedule-restaurant', ({ roomId, restaurantId }: { roomId: string; restaurantId: string }) => {
       unscheduleRestaurant(roomId, restaurantId);
+      io.to(roomId).emit('room-state', getRoomState(roomId));
+    });
+
+    socket.on('complete-restaurant', ({
+      roomId,
+      restaurantId,
+      details
+    }: {
+      roomId: string;
+      restaurantId: string;
+      details: {
+        eatenDate?: string;
+        rating?: number;
+        review?: string;
+        cost?: string | number;
+      };
+    }) => {
+      completeRestaurant(roomId, restaurantId, details);
+      io.to(roomId).emit('room-state', getRoomState(roomId));
+    });
+
+    socket.on('add-completed-restaurant', ({
+      roomId,
+      data
+    }: {
+      roomId: string;
+      data: any;
+    }) => {
+      addCompletedRestaurant(roomId, data);
+      io.to(roomId).emit('room-state', getRoomState(roomId));
+    });
+
+    socket.on('revisit-restaurant', ({
+      roomId,
+      restaurantId
+    }: {
+      roomId: string;
+      restaurantId: string;
+    }) => {
+      revisitRestaurant(roomId, restaurantId);
       io.to(roomId).emit('room-state', getRoomState(roomId));
     });
 

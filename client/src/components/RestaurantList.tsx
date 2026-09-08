@@ -3,6 +3,7 @@ import { useSocket } from '../context/SocketContext';
 import { MEAL_SLOTS } from '../types';
 import type { MealSlotType, Restaurant } from '../types';
 import { formatDateWithWeekday } from '../utils/dateHelpers';
+import confetti from 'canvas-confetti';
 import {
   Plus,
   Trash2,
@@ -32,6 +33,7 @@ export const RestaurantList: React.FC = () => {
     updateRestaurant,
     deleteRestaurant,
     unscheduleRestaurant,
+    completeRestaurant,
     openScheduler,
   } = useSocket();
 
@@ -447,6 +449,19 @@ export const RestaurantList: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              completeRestaurant(restaurant.id, {
+                                eatenDate: restaurant.scheduledDate,
+                                rating: 5,
+                              });
+                              confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+                            }}
+                            title="吃完啦？点击打卡记录美食足迹"
+                            className="text-xs px-2 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold flex items-center gap-1 transition-colors"
+                          >
+                            <span>🎉 打卡</span>
+                          </button>
                           <button
                             onClick={() => startEditing(restaurant)}
                             title="修改信息/备注"

@@ -31,10 +31,15 @@ export interface Restaurant {
   priority: number; // 1: 必须吃, 2: 很想吃, 3: 想尝试, 4: 备选
   preferredSlotType: 'any' | MealSlotType;
   notes?: string;
-  status: 'pending' | 'scheduled' | 'skipped';
+  status: 'pending' | 'scheduled' | 'skipped' | 'completed';
   scheduledDate?: string;
   scheduledSlotType?: MealSlotType;
   scheduledSlotLabel?: string;
+  eatenDate?: string;
+  completedAt?: number;
+  rating?: number; // 1-5
+  review?: string;
+  cost?: string | number;
   createdAt: number;
   orderIndex: number;
 }

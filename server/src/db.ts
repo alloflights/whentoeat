@@ -310,3 +310,110 @@ export function resetAllSchedules(roomId: string): void {
   store.rooms[roomId] = room;
   writeStore(store);
 }
+
+export function completeRestaurant(
+  roomId: string,
+  restaurantId: string,
+  details: {
+    eatenDate?: string;
+    rating?: number;
+    review?: string;
+    cost?: string | number;
+  }
+): Restaurant | null {
+  const store = readStore();
+  const room = store.rooms[roomId];
+  if (!room) return null;
+
+  const target = room.restaurants.find(r => r.id === restaurantId);
+  if (!target) return null;
+
+  target.status = 'completed';
+  target.completedAt = Date.now();
+  target.eatenDate = details.eatenDate || target.scheduledDate || new Date().toISOString().split('T')[0];
+  if (details.rating !== undefined) target.rating = details.rating;
+  if (details.review !== undefined) target.review = details.review.trim();
+  if (details.cost !== undefined) target.cost = details.cost;
+
+  room.updatedAt = Date.now();
+  store.rooms[roomId] = room;
+  writeStore(store);
+  return target;
+}
+
+export function addCompletedRestaurant(
+  roomId: string,
+  data: {
+    name: string;
+    category: string;
+    eatenDate: string;
+    scheduledSlotType?: any;
+    scheduledSlotLabel?: string;
+    rating?: number;
+    review?: string;
+    cost?: string | number;
+    notes?: string;
+  }
+): Restaurant {
+  const store = readStore();
+  const room = store.rooms[roomId] || ensureRoom(roomId);
+  const now = Date.now();
+  const maxOrder = room.restaurants.reduce((max, r) => Math.max(max, r.orderIndex || 0), 0);
+
+  const newRestaurant: Restaurant = {
+    id: `rest_${Math.random().toString(36).substring(2, 9)}`,
+    roomId,
+    name: data.name.trim(),
+    category: data.category.trim() || '火锅',
+    priority: 3,
+    preferredSlotType: data.scheduledSlotType || 'dinner',
+    notes: data.notes || '',
+    status: 'completed',
+    eatenDate: data.eatenDate,
+    scheduledDate: data.eatenDate,
+    scheduledSlotType: data.scheduledSlotType || 'dinner',
+    scheduledSlotLabel: data.scheduledSlotLabel || '晚餐',
+    completedAt: now,
+    rating: data.rating || 5,
+    review: data.review?.trim() || '',
+    cost: data.cost,
+    createdAt: now,
+    orderIndex: maxOrder + 1,
+  };
+
+  room.restaurants.push(newRestaurant);
+  room.updatedAt = now;
+  store.rooms[roomId] = room;
+  writeStore(store);
+  return newRestaurant;
+}
+
+export function revisitRestaurant(roomId: string, restaurantId: string): Restaurant | null {
+  const store = readStore();
+  const room = store.rooms[roomId];
+  if (!room) return null;
+
+  const target = room.restaurants.find(r => r.id === restaurantId);
+  if (!target) return null;
+
+  const now = Date.now();
+  const maxOrder = room.restaurants.reduce((max, r) => Math.max(max, r.orderIndex || 0), 0);
+  const cloned: Restaurant = {
+    id: `rest_${Math.random().toString(36).substring(2, 9)}`,
+    roomId,
+    name: target.name,
+    category: target.category,
+    priority: 1,
+    preferredSlotType: target.preferredSlotType || 'dinner',
+    notes: `再度打卡（上次评价: ${target.review || `${target.rating || 5}星`}）`,
+    status: 'pending',
+    createdAt: now,
+    orderIndex: maxOrder + 1,
+  };
+
+  room.restaurants.push(cloned);
+  room.updatedAt = now;
+  store.rooms[roomId] = room;
+  writeStore(store);
+  return cloned;
+}
