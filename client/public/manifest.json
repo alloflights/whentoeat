@@ -1,0 +1,16 @@
+{
+  "short_name": "约饭助手",
+  "name": "EatTogether - 双人协同约饭排期助手",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#ea580c",
+  "display": "standalone",
+  "orientation": "portrait"
+}
