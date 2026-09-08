@@ -22,6 +22,13 @@ interface SocketContextValue {
     preferredSlotType: 'any' | MealSlotType;
     notes?: string;
   }) => void;
+  updateRestaurant: (id: string, updates: {
+    name?: string;
+    category?: string;
+    priority?: number;
+    preferredSlotType?: 'any' | MealSlotType;
+    notes?: string;
+  }) => void;
   deleteRestaurant: (id: string) => void;
   confirmScheduleStep: (restaurantId: string, date: string, slotType: MealSlotType, slotLabel: string) => void;
   skipScheduleStep: (restaurantId: string) => void;
@@ -148,6 +155,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode; roomId: strin
     });
   }, [socket, roomId]);
 
+  const updateRestaurant = useCallback((restaurantId: string, updates: {
+    name?: string;
+    category?: string;
+    priority?: number;
+    preferredSlotType?: 'any' | MealSlotType;
+    notes?: string;
+  }) => {
+    if (!socket) return;
+    socket.emit('update-restaurant', { roomId, restaurantId, updates });
+  }, [socket, roomId]);
+
   const deleteRestaurant = useCallback((restaurantId: string) => {
     if (!socket) return;
     socket.emit('delete-restaurant', { roomId, restaurantId });
@@ -210,6 +228,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode; roomId: strin
         setBusy,
         clearBusy,
         addRestaurant,
+        updateRestaurant,
         deleteRestaurant,
         confirmScheduleStep,
         skipScheduleStep,

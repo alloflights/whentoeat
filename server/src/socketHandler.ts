@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import {
   getRoomState,
   saveRestaurant,
+  updateRestaurant,
   deleteRestaurant,
   scheduleRestaurant,
   unscheduleRestaurant,
@@ -98,6 +99,19 @@ export function setupSocketHandlers(io: Server) {
         preferredSlotType,
         notes,
       });
+      io.to(roomId).emit('room-state', getRoomState(roomId));
+    });
+
+    socket.on('update-restaurant', ({
+      roomId,
+      restaurantId,
+      updates
+    }: {
+      roomId: string;
+      restaurantId: string;
+      updates: any;
+    }) => {
+      updateRestaurant(roomId, restaurantId, updates);
       io.to(roomId).emit('room-state', getRoomState(roomId));
     });
 

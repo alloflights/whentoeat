@@ -193,6 +193,31 @@ export function deleteRestaurant(roomId: string, restaurantId: string): void {
   writeStore(store);
 }
 
+export function updateRestaurant(
+  roomId: string,
+  restaurantId: string,
+  updates: Partial<Omit<Restaurant, 'id' | 'roomId' | 'createdAt'>>
+): Restaurant | null {
+  const store = readStore();
+  const room = store.rooms[roomId];
+  if (!room) return null;
+
+  const target = room.restaurants.find(r => r.id === restaurantId);
+  if (!target) return null;
+
+  if (updates.name !== undefined) target.name = updates.name.trim();
+  if (updates.category !== undefined) target.category = updates.category.trim();
+  if (updates.priority !== undefined) target.priority = updates.priority;
+  if (updates.preferredSlotType !== undefined) target.preferredSlotType = updates.preferredSlotType;
+  if (updates.notes !== undefined) target.notes = updates.notes;
+
+  room.updatedAt = Date.now();
+  store.rooms[roomId] = room;
+  writeStore(store);
+
+  return target;
+}
+
 export function scheduleRestaurant(
   roomId: string,
   restaurantId: string,

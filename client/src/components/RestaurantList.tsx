@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { MEAL_SLOTS } from '../types';
-import type { MealSlotType } from '../types';
+import type { MealSlotType, Restaurant } from '../types';
 import { formatDateWithWeekday } from '../utils/dateHelpers';
 import {
   Plus,
   Trash2,
+  Pencil,
+  X,
   Sparkles,
   Flame,
   Star,
@@ -27,6 +29,7 @@ export const RestaurantList: React.FC = () => {
   const {
     roomState,
     addRestaurant,
+    updateRestaurant,
     deleteRestaurant,
     unscheduleRestaurant,
     openScheduler,
@@ -40,7 +43,50 @@ export const RestaurantList: React.FC = () => {
   const [preferredSlotType, setPreferredSlotType] = useState<'any' | MealSlotType>('dinner');
   const [notes, setNotes] = useState('');
 
+  // Editing state
+  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editCategory, setEditCategory] = useState('火锅');
+  const [editCustomCategory, setEditCustomCategory] = useState('');
+  const [editPriority, setEditPriority] = useState<number>(1);
+  const [editPreferredSlotType, setEditPreferredSlotType] = useState<'any' | MealSlotType>('dinner');
+  const [editNotes, setEditNotes] = useState('');
+
   const restaurants = roomState?.restaurants || [];
+
+  const startEditing = (r: Restaurant) => {
+    setEditingRestaurant(r);
+    setEditName(r.name);
+    if (CATEGORY_PRESETS.includes(r.category)) {
+      setEditCategory(r.category);
+      setEditCustomCategory('');
+    } else {
+      setEditCategory('自主填写...');
+      setEditCustomCategory(r.category);
+    }
+    setEditPriority(r.priority);
+    setEditPreferredSlotType(r.preferredSlotType || 'any');
+    setEditNotes(r.notes || '');
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRestaurant || !editName.trim()) return;
+
+    const finalCategory = editCategory === '自主填写...'
+      ? (editCustomCategory.trim() || '自主')
+      : editCategory;
+
+    updateRestaurant(editingRestaurant.id, {
+      name: editName.trim(),
+      category: finalCategory,
+      priority: editPriority,
+      preferredSlotType: editPreferredSlotType,
+      notes: editNotes.trim(),
+    });
+
+    setEditingRestaurant(null);
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -332,13 +378,22 @@ export const RestaurantList: React.FC = () => {
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => deleteRestaurant(restaurant.id)}
-                          title="删除"
-                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 rounded transition-all"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => startEditing(restaurant)}
+                            title="修改信息"
+                            className="p-1 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => deleteRestaurant(restaurant.id)}
+                            title="删除"
+                            className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-xs">
@@ -377,23 +432,44 @@ export const RestaurantList: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <CalendarCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                           <div>
-                            <span className="text-xs font-bold text-slate-800 line-through text-slate-400 decoration-slate-300">
+                            <span className="text-xs font-bold text-emerald-900">
                               {restaurant.name}
                             </span>
-                            <span className="ml-2 text-xs font-bold text-emerald-800">
-                              {restaurant.name}
+                            <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-medium">
+                              {restaurant.category}
                             </span>
+                            {restaurant.notes && (
+                              <p className="text-[11px] text-emerald-700/80 mt-0.5 line-clamp-1">
+                                💬 {restaurant.notes}
+                              </p>
+                            )}
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => unscheduleRestaurant(restaurant.id)}
-                          title="撤回排期并重新放入待排池"
-                          className="text-xs text-slate-400 hover:text-orange-600 p-1 rounded flex items-center gap-1 transition-colors"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          <span className="text-[10px]">撤回</span>
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => startEditing(restaurant)}
+                            title="修改信息/备注"
+                            className="p-1 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => unscheduleRestaurant(restaurant.id)}
+                            title="撤回排期并重新放入待排池"
+                            className="text-xs text-slate-400 hover:text-orange-600 p-1 rounded-lg hover:bg-orange-50 flex items-center gap-1 transition-colors"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span className="text-[10px]">撤回</span>
+                          </button>
+                          <button
+                            onClick={() => deleteRestaurant(restaurant.id)}
+                            title="删除"
+                            className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between text-xs pt-1 border-t border-emerald-100">
@@ -414,6 +490,174 @@ export const RestaurantList: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Restaurant Modal */}
+      {editingRestaurant && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="p-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-4 h-4" />
+                <h3 className="text-sm font-black">编辑餐厅 / 饮品店信息</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingRestaurant(null)}
+                className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveEdit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+              {/* Name */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                  餐厅 / 饮品店名称 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="例如：海底捞 / 某某日料居酒屋"
+                  className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                  菜系 / 类型分类
+                </label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {CATEGORY_PRESETS.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setEditCategory(cat)}
+                      className={`text-xs px-2.5 py-1 rounded-xl border transition-all ${
+                        editCategory === cat
+                          ? 'bg-orange-500 text-white border-orange-500 font-bold shadow-xs'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                {editCategory === '自主填写...' && (
+                  <input
+                    type="text"
+                    required
+                    value={editCustomCategory}
+                    onChange={(e) => setEditCustomCategory(e.target.value)}
+                    placeholder="请输入自定义菜系（例如：云南酸汤火锅 / 东北铁锅炖）"
+                    className="w-full text-xs border border-orange-300 rounded-xl px-3 py-2 bg-orange-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                )}
+              </div>
+
+              {/* Priority */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                  想吃优先级（算法将优先推荐高优先级餐厅）
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { p: 1, label: 'P1 必吃', desc: '心心念念', color: 'border-rose-300 bg-rose-50 text-rose-800' },
+                    { p: 2, label: 'P2 很想吃', desc: '近期必打卡', color: 'border-orange-300 bg-orange-50 text-orange-800' },
+                    { p: 3, label: 'P3 想尝试', desc: '尝鲜种草', color: 'border-blue-300 bg-blue-50 text-blue-800' },
+                    { p: 4, label: 'P4 备选', desc: '有空再去', color: 'border-slate-300 bg-slate-50 text-slate-800' },
+                  ].map(({ p, label, desc, color }) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setEditPriority(p)}
+                      className={`p-2 rounded-xl border text-center transition-all ${
+                        editPriority === p
+                          ? `${color} ring-2 ring-orange-400 font-bold shadow-xs`
+                          : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50 text-slate-600'
+                      }`}
+                    >
+                      <div className="text-xs font-bold">{label}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">{desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preferred Slot */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                  时段偏好
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditPreferredSlotType('any')}
+                    className={`text-xs px-3 py-1.5 rounded-xl border transition-all ${
+                      editPreferredSlotType === 'any'
+                        ? 'bg-slate-900 text-white border-slate-900 font-bold shadow-xs'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    ✨ 任意时段均可
+                  </button>
+                  {MEAL_SLOTS.map((slot) => (
+                    <button
+                      key={slot.type}
+                      type="button"
+                      onClick={() => setEditPreferredSlotType(slot.type)}
+                      className={`text-xs px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1 ${
+                        editPreferredSlotType === slot.type
+                          ? 'bg-orange-500 text-white border-orange-500 font-bold shadow-xs'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>{slot.icon}</span>
+                      <span>{slot.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                  备注 / 人均 / 种草理由（选填）
+                </label>
+                <input
+                  type="text"
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  placeholder="例如：人均80，周五有双人团购套餐 / 必点招牌提拉米苏"
+                  className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingRestaurant(null)}
+                  className="text-xs px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-medium transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  className="text-xs px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-xs transition-colors"
+                >
+                  保存修改
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
