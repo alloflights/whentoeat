@@ -21,6 +21,8 @@ interface ActiveModalState {
   dayOfWeek: string;
   currentRecord?: BusyRecord;
   isWeekly: boolean;
+  otherRecord?: BusyRecord;
+  otherIsWeekly: boolean;
 }
 
 const PRESET_REASONS = {
@@ -64,7 +66,9 @@ export const AvailabilityGrid: React.FC = () => {
     weekday: number,
     dayOfWeek: string,
     currentRecord?: BusyRecord,
-    isWeekly = false
+    isWeekly = false,
+    otherRecord?: BusyRecord,
+    otherIsWeekly = false
   ) => {
     setActiveModal({
       dateStr,
@@ -74,6 +78,8 @@ export const AvailabilityGrid: React.FC = () => {
       dayOfWeek,
       currentRecord,
       isWeekly,
+      otherRecord,
+      otherIsWeekly,
     });
     if (currentRecord) {
       setSelectedBusyType(currentRecord.type);
@@ -201,18 +207,30 @@ export const AvailabilityGrid: React.FC = () => {
                   // Mutual free = Neither is busy and slot is not occupied
                   const isMutualFree = !isOccupied && !u1BusyRecord && !u2BusyRecord;
 
-                  // Current active user record
+                  // Current active user record and partner record
                   const currentRecord = currentUserRole === 'user1' ? u1BusyRecord : u2BusyRecord;
                   const isCurrentWeekly = currentUserRole === 'user1' ? isU1Weekly : isU2Weekly;
+                  const otherRecord = currentUserRole === 'user1' ? u2BusyRecord : u1BusyRecord;
+                  const isOtherWeekly = currentUserRole === 'user1' ? isU2Weekly : isU1Weekly;
 
-                  // Styling
+                  const isU1Busy = Boolean(u1BusyRecord);
+                  const isU2Busy = Boolean(u2BusyRecord);
+
+                  // Distinct Styling based on WHO is busy
                   let cellStyle = '';
                   if (isOccupied) {
                     cellStyle = 'bg-slate-100 border-slate-300 text-slate-500 shadow-inner cursor-not-allowed';
                   } else if (isMutualFree) {
-                    cellStyle = 'bg-gradient-to-br from-emerald-50/90 to-teal-50/80 border-emerald-300/80 hover:border-emerald-500 hover:from-emerald-100 hover:to-teal-100 shadow-2xs';
+                    cellStyle = 'bg-gradient-to-br from-emerald-50/90 to-teal-50/80 border-emerald-400 hover:border-emerald-500 hover:from-emerald-100 hover:to-teal-100 shadow-2xs ring-1 ring-emerald-200/50';
+                  } else if (isU1Busy && !isU2Busy) {
+                    // ONLY User 1 is busy: Rose/Pink highlight
+                    cellStyle = 'bg-gradient-to-br from-rose-50/90 to-pink-50/70 border-rose-300 hover:border-rose-400 text-rose-950 shadow-2xs';
+                  } else if (!isU1Busy && isU2Busy) {
+                    // ONLY User 2 is busy: Sky/Blue highlight
+                    cellStyle = 'bg-gradient-to-br from-sky-50/90 to-blue-50/70 border-sky-300 hover:border-sky-400 text-sky-950 shadow-2xs';
                   } else {
-                    cellStyle = 'bg-slate-50/80 border-slate-200/90 hover:bg-slate-100/80 text-slate-700';
+                    // Both are busy
+                    cellStyle = 'bg-gradient-to-br from-purple-50/70 to-slate-100 border-purple-300/80 hover:border-purple-400 text-slate-800 shadow-2xs';
                   }
 
                   return (
@@ -227,7 +245,9 @@ export const AvailabilityGrid: React.FC = () => {
                             day.weekday,
                             day.dayOfWeek,
                             currentRecord,
-                            isCurrentWeekly
+                            isCurrentWeekly,
+                            otherRecord,
+                            isOtherWeekly
                           );
                         }
                       }}
@@ -235,9 +255,9 @@ export const AvailabilityGrid: React.FC = () => {
                       title={
                         isOccupied
                           ? `已敲定：${occupiedInfo?.restaurantName}`
-                          : `点击标记 ${currentUserRole === 'user1' ? user1Name : user2Name} 是否没空`
+                          : `点击标记 ${currentUserRole === 'user1' ? user1Name : user2Name} 是否有事`
                       }
-                      className={`min-h-[64px] rounded-2xl border p-1.5 flex flex-col justify-between items-center transition-all select-none group text-left ${cellStyle}`}
+                      className={`min-h-[66px] rounded-2xl border p-1.5 flex flex-col justify-between items-center transition-all select-none group text-left ${cellStyle}`}
                     >
                       {/* Occupied State */}
                       {isOccupied ? (
@@ -254,36 +274,55 @@ export const AvailabilityGrid: React.FC = () => {
                             <Sparkles className="w-3.5 h-3.5 text-emerald-500 fill-emerald-400" />
                             <span>均有空</span>
                           </div>
-                          <span className="text-[10px] text-emerald-600/90 bg-emerald-100/60 px-2 py-0.2 rounded-full font-medium">
+                          <span className="text-[10px] text-emerald-600/90 bg-emerald-100/60 px-2 py-0.2 rounded-full font-bold">
                             可约饭
                           </span>
                         </div>
+                      ) : isU1Busy && !isU2Busy ? (
+                        /* Only User 1 has things to do (Pink) */
+                        <div className="flex flex-col justify-between h-full w-full py-0.5">
+                          <div className="flex items-center justify-between text-[10px] w-full leading-tight">
+                            <span className="font-bold text-rose-700 flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+                              <span>{user1Name}有事</span>
+                            </span>
+                            <span className="text-[9px] text-emerald-700 font-medium">({user2Name}有空)</span>
+                          </div>
+                          <div className="text-[10px] px-1.5 py-0.5 rounded-lg bg-rose-100/90 text-rose-950 font-bold truncate border border-rose-200 mt-1">
+                            <span className="mr-0.5">{u1BusyRecord?.type === 'weekly' ? '🔄' : u1BusyRecord?.type === 'this_week' ? '📅' : '⏱️'}</span>
+                            <span className="truncate">{u1BusyRecord?.reason || (u1BusyRecord?.type === 'weekly' ? '每周课表' : u1BusyRecord?.type === 'this_week' ? '这周特例' : '暂时有事')}</span>
+                          </div>
+                        </div>
+                      ) : !isU1Busy && isU2Busy ? (
+                        /* Only User 2 has things to do (Blue) */
+                        <div className="flex flex-col justify-between h-full w-full py-0.5">
+                          <div className="flex items-center justify-between text-[10px] w-full leading-tight">
+                            <span className="font-bold text-sky-700 flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
+                              <span>{user2Name}有事</span>
+                            </span>
+                            <span className="text-[9px] text-emerald-700 font-medium">({user1Name}有空)</span>
+                          </div>
+                          <div className="text-[10px] px-1.5 py-0.5 rounded-lg bg-sky-100/90 text-sky-950 font-bold truncate border border-sky-200 mt-1">
+                            <span className="mr-0.5">{u2BusyRecord?.type === 'weekly' ? '🔄' : u2BusyRecord?.type === 'this_week' ? '📅' : '⏱️'}</span>
+                            <span className="truncate">{u2BusyRecord?.reason || (u2BusyRecord?.type === 'weekly' ? '每周课表' : u2BusyRecord?.type === 'this_week' ? '这周特例' : '暂时有事')}</span>
+                          </div>
+                        </div>
                       ) : (
-                        /* At least one person is busy */
-                        <div className="flex flex-col justify-center gap-1 w-full h-full py-0.5">
-                          {/* User 1 Busy Badge */}
-                          {u1BusyRecord && (
-                            <div className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-lg bg-rose-100/90 text-rose-800 font-semibold truncate border border-rose-200">
-                              <span className="shrink-0">
-                                {u1BusyRecord.type === 'weekly' ? '🔄' : u1BusyRecord.type === 'this_week' ? '📅' : '⏱️'}
-                              </span>
-                              <span className="truncate">
-                                {user1Name}: {u1BusyRecord.reason || (u1BusyRecord.type === 'weekly' ? '每周有课' : u1BusyRecord.type === 'this_week' ? '这周没空' : '暂时有事')}
-                              </span>
+                        /* Both are busy */
+                        <div className="flex flex-col justify-between h-full w-full py-0.5">
+                          <div className="text-[10px] font-bold text-purple-900 flex items-center gap-1 leading-tight">
+                            <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+                            <span>两人均有事</span>
+                          </div>
+                          <div className="space-y-0.5 w-full mt-1">
+                            <div className="text-[9px] px-1 py-0.2 rounded bg-rose-100 text-rose-900 font-semibold truncate border border-rose-200">
+                              {user1Name}: {u1BusyRecord?.reason || '没空'}
                             </div>
-                          )}
-
-                          {/* User 2 Busy Badge */}
-                          {u2BusyRecord && (
-                            <div className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-lg bg-sky-100/90 text-sky-800 font-semibold truncate border border-sky-200">
-                              <span className="shrink-0">
-                                {u2BusyRecord.type === 'weekly' ? '🔄' : u2BusyRecord.type === 'this_week' ? '📅' : '⏱️'}
-                              </span>
-                              <span className="truncate">
-                                {user2Name}: {u2BusyRecord.reason || (u2BusyRecord.type === 'weekly' ? '每周有课' : u2BusyRecord.type === 'this_week' ? '这周没空' : '暂时有事')}
-                              </span>
+                            <div className="text-[9px] px-1 py-0.2 rounded bg-sky-100 text-sky-900 font-semibold truncate border border-sky-200">
+                              {user2Name}: {u2BusyRecord?.reason || '没空'}
                             </div>
-                          )}
+                          </div>
                         </div>
                       )}
                     </button>
@@ -297,22 +336,22 @@ export const AvailabilityGrid: React.FC = () => {
 
       {/* Legend Footer */}
       <div className="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-3">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-1.5 font-bold text-emerald-700">
-            <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-emerald-200 flex items-center justify-center text-[10px] text-white">✓</span>
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-1.5 font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
             <span>双方均有空（可约饭）</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm leading-none">🔄</span>
-            <span>每周固定没空（课表/固定活动）</span>
+          <div className="flex items-center gap-1.5 font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-xl border border-rose-200">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+            <span>【{user1Name}】有事</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm leading-none">📅</span>
-            <span>这周没空（备考/赶作业特例）</span>
+          <div className="flex items-center gap-1.5 font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-xl border border-sky-200">
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+            <span>【{user2Name}】有事</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm leading-none">⏱️</span>
-            <span>暂时没空（临时有事）</span>
+          <div className="flex items-center gap-1.5 font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-xl border border-purple-200">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+            <span>两人均有事</span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-400">
             <Lock className="w-3.5 h-3.5" />
@@ -345,6 +384,23 @@ export const AvailabilityGrid: React.FC = () => {
 
             {/* Modal Content */}
             <div className="p-5 space-y-4">
+              {/* Partner Status Hint */}
+              <div className={`p-3 rounded-2xl border text-xs flex items-center justify-between ${
+                activeModal.otherRecord 
+                  ? 'bg-sky-50/90 border-sky-200 text-sky-900' 
+                  : 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+              }`}>
+                <span className="font-semibold flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${activeModal.otherRecord ? 'bg-sky-500' : 'bg-emerald-500'}`}></span>
+                  <span>对方状态（{currentUserRole === 'user1' ? user2Name : user1Name}）：</span>
+                </span>
+                <span className="font-bold">
+                  {activeModal.otherRecord 
+                    ? `【有事】${activeModal.otherRecord.reason || '没空'}` 
+                    : '目前有空 ✨'}
+                </span>
+              </div>
+
               {/* Option 1: 每周固定没空 */}
               <div
                 onClick={() => setSelectedBusyType('weekly')}
