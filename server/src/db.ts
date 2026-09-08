@@ -85,6 +85,29 @@ export function updateRoomUsers(roomId: string, user1Name: string, user2Name: st
   return room;
 }
 
+export function restoreRoomState(roomId: string, backupState: Partial<RoomState>): RoomState {
+  const store = readStore();
+  const room = store.rooms[roomId] || ensureRoom(roomId);
+  if (Array.isArray(backupState.restaurants) && backupState.restaurants.length > 0) {
+    room.restaurants = backupState.restaurants;
+  }
+  if (backupState.weeklyBusy) {
+    room.weeklyBusy = {
+      user1: { ...room.weeklyBusy?.user1, ...backupState.weeklyBusy.user1 },
+      user2: { ...room.weeklyBusy?.user2, ...backupState.weeklyBusy.user2 },
+    };
+  }
+  if (backupState.dateBusy) {
+    room.dateBusy = { ...room.dateBusy, ...backupState.dateBusy };
+  }
+  if (backupState.user1Name) room.user1Name = backupState.user1Name;
+  if (backupState.user2Name) room.user2Name = backupState.user2Name;
+  room.updatedAt = Date.now();
+  store.rooms[roomId] = room;
+  writeStore(store);
+  return room;
+}
+
 export function setBusyStatus(
   roomId: string,
   userRole: 'user1' | 'user2',

@@ -73,6 +73,34 @@ export const SocketProvider: React.FC<{ children: React.ReactNode; roomId: strin
 
     newSocket.on('room-state', (state: RoomState) => {
       setRoomState(state);
+
+      const hasContent = (state.restaurants && state.restaurants.length > 0) ||
+        Object.keys(state.weeklyBusy?.user1 || {}).length > 0 ||
+        Object.keys(state.weeklyBusy?.user2 || {}).length > 0 ||
+        Object.keys(state.dateBusy || {}).length > 0;
+
+      const storageKey = `eat_together_backup_${roomId}`;
+
+      if (hasContent) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(state));
+        } catch {
+          // ignore quota errors
+        }
+      } else {
+        // Server returned empty state (e.g. after cloud redeployment). Auto-restore from local backup!
+        try {
+          const cached = localStorage.getItem(storageKey);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed && ((parsed.restaurants && parsed.restaurants.length > 0) || parsed.weeklyBusy || parsed.dateBusy)) {
+              newSocket.emit('restore-room-state', { roomId, backupState: parsed });
+            }
+          }
+        } catch {
+          // ignore json errors
+        }
+      }
     });
 
     newSocket.on('presence-update', ({ activeCount }: { activeCount: number }) => {

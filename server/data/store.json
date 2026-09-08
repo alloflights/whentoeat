@@ -1,0 +1,86 @@
+{
+  "rooms": {
+    "weekend-foodies": {
+      "roomId": "weekend-foodies",
+      "user1Name": "我",
+      "user2Name": "TA",
+      "weeklyBusy": {
+        "user1": {
+          "weekday_5_dinner": {
+            "type": "weekly",
+            "reason": "高等数学习题课"
+          }
+        },
+        "user2": {}
+      },
+      "dateBusy": {
+        "2026-09-12_lunch": {
+          "user2": {
+            "type": "this_week",
+            "reason": "大作业Pre汇报"
+          }
+        },
+        "2026-09-13_lunch": {
+          "user2": {
+            "type": "temp",
+            "reason": "导师临时组会"
+          }
+        }
+      },
+      "restaurants": [
+        {
+          "id": "rest_hotpot_1",
+          "roomId": "weekend-foodies",
+          "name": "川味老火锅",
+          "category": "火锅",
+          "priority": 1,
+          "preferredSlotType": "dinner",
+          "notes": "考完高数必须吃一顿！毛肚/鸭肠必点",
+          "status": "scheduled",
+          "scheduledDate": "2026-09-12",
+          "scheduledSlotType": "dinner",
+          "scheduledSlotLabel": "晚餐",
+          "createdAt": 1788877000000,
+          "orderIndex": 1
+        },
+        {
+          "id": "rest_bbq_2",
+          "roomId": "weekend-foodies",
+          "name": "大学城烤肉居酒屋",
+          "category": "烤肉/烧烤",
+          "priority": 2,
+          "preferredSlotType": "dinner",
+          "notes": "周六晚上去放松，厚切牛舌必点",
+          "status": "pending",
+          "createdAt": 1788877001000,
+          "orderIndex": 2
+        },
+        {
+          "id": "rest_milktea_3",
+          "roomId": "weekend-foodies",
+          "name": "校门口鲜奶茶",
+          "category": "咖啡甜品",
+          "priority": 3,
+          "preferredSlotType": "afternoon_tea",
+          "notes": "少糖微冰，新出的爆汁鲜橙茉莉",
+          "status": "pending",
+          "createdAt": 1788877002000,
+          "orderIndex": 3
+        },
+        {
+          "id": "rest_beef_4",
+          "roomId": "weekend-foodies",
+          "name": "潮汕生腌与牛肉自助",
+          "category": "自助/自主",
+          "priority": 4,
+          "preferredSlotType": "any",
+          "notes": "人均98，吊龙雪花肉质超赞",
+          "status": "pending",
+          "createdAt": 1788877003000,
+          "orderIndex": 4
+        }
+      ],
+      "updatedAt": 1788878080150
+    }
+  }
+}

@@ -9,7 +9,7 @@ client/dist/
 server/dist/
 
 # Local data / database
-server/data/
+server/data/*.tmp
 *.tmp
 
 # Environment & Logs

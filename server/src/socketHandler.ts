@@ -8,6 +8,7 @@ import {
   unscheduleRestaurant,
   resetAllSchedules,
   updateRoomUsers,
+  restoreRoomState,
   skipRestaurant,
   setBusyStatus,
   clearBusyStatus
@@ -34,6 +35,13 @@ export function setupSocketHandlers(io: Server) {
     socket.on('update-profile', ({ roomId, user1Name, user2Name }: { roomId: string; user1Name: string; user2Name: string }) => {
       updateRoomUsers(roomId, user1Name, user2Name);
       io.to(roomId).emit('room-state', getRoomState(roomId));
+    });
+
+    socket.on('restore-room-state', ({ roomId, backupState }: { roomId: string; backupState: any }) => {
+      if (backupState && typeof backupState === 'object') {
+        restoreRoomState(roomId, backupState);
+        io.to(roomId).emit('room-state', getRoomState(roomId));
+      }
     });
 
     socket.on('set-busy', ({
